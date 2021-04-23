@@ -10,8 +10,7 @@ KinectAzure::KinectAzure() {
 	std::cout << "Start to initialize Kinect Azure" << std::endl;
 
 	const uint32_t deviceCount = k4a::device::get_installed_count();
-	if (deviceCount == 0)
-	{
+	if (deviceCount == 0){
 		std::cout << "No azure kinect devices detected!" << std::endl;
 	}
 
@@ -35,7 +34,7 @@ KinectAzure::KinectAzure() {
 
 void KinectAzure::ShowData() //show data
 {
-	std::cout << "Press ESC to ecape" << std::endl;
+	std::cout << "Press ESC to quit View Mode" << std::endl;
 
 	std::vector<Pixel> depthTextureBuffer;
 	std::vector<Pixel> irTextureBuffer;
@@ -51,29 +50,28 @@ void KinectAzure::ShowData() //show data
 	cv::Mat colorFrame;
 	cv::Mat irFrame;
 
-	while (1)
-	{
-		if (device.get_capture(&capture, std::chrono::milliseconds(0)))
-		{
-			{
-				depthImage = capture.get_depth_image();
-				colorImage = capture.get_color_image();
-				irImage = capture.get_ir_image();
+	while (1){
+		if (device.get_capture(&capture, std::chrono::milliseconds(0))){
+			colorImage = capture.get_color_image();
+			//depthImage = capture.get_depth_image();
+			//irImage = capture.get_ir_image();
 
-				ColorizeDepthImage(depthImage, DepthPixelColorizer::ColorizeBlueToRed, GetDepthModeRange(config.depth_mode), &depthTextureBuffer);
-				ColorizeDepthImage(irImage, DepthPixelColorizer::ColorizeGreyscale, GetIrLevels(K4A_DEPTH_MODE_PASSIVE_IR), &irTextureBuffer);
-				colorTextureBuffer = colorImage.get_buffer();
-
-				depthFrame = cv::Mat(depthImage.get_height_pixels(), depthImage.get_width_pixels(), CV_8UC4, depthTextureBuffer.data());
-				colorFrame = cv::Mat(colorImage.get_height_pixels(), colorImage.get_width_pixels(), CV_8UC4, colorTextureBuffer);
-				irFrame = cv::Mat(irImage.get_height_pixels(), irImage.get_width_pixels(), CV_8UC4, irTextureBuffer.data());
-				cv::imshow("kinect depth map master", depthFrame);
-				cv::imshow("kinect color frame master", colorFrame);
-				cv::imshow("kinect ir frame master", irFrame);
-			}
+			colorTextureBuffer = colorImage.get_buffer();
+			//ColorizeDepthImage(depthImage, DepthPixelColorizer::ColorizeBlueToRed, GetDepthModeRange(config.depth_mode), &depthTextureBuffer);
+			//ColorizeDepthImage(irImage, DepthPixelColorizer::ColorizeGreyscale, GetIrLevels(K4A_DEPTH_MODE_PASSIVE_IR), &irTextureBuffer);
+			
+			colorFrame = cv::Mat(colorImage.get_height_pixels(), colorImage.get_width_pixels(), CV_8UC2, colorTextureBuffer);
+			//colorFrame = cv::Mat(colorImage.get_height_pixels(), colorImage.get_width_pixels(), CV_8UC4, colorTextureBuffer);
+			//depthFrame = cv::Mat(depthImage.get_height_pixels(), depthImage.get_width_pixels(), CV_8UC4, depthTextureBuffer.data());
+			//irFrame = cv::Mat(irImage.get_height_pixels(), irImage.get_width_pixels(), CV_8UC4, irTextureBuffer.data());
+			
+			cvtColor(colorFrame, colorFrame, cv::COLOR_YUV2BGR_YUY2); //COLOR_YUV2BGR_YUY2, COLOR_YUV2BGR_UYVY
+			cv::imshow("kinect color frame master", colorFrame);
+			//cv::imshow("kinect depth map master", depthFrame);
+			//cv::imshow("kinect ir frame master", irFrame);
 		}
-		if (cv::waitKey(30) == 27 || cv::waitKey(30) == 'q')
-		{
+		if (cv::waitKey(30) == 27 || cv::waitKey(30) == 'q'){
+			cv::destroyAllWindows();
 			break;
 		}
 	}
@@ -82,16 +80,15 @@ void KinectAzure::ShowData() //show data
 void KinectAzure::RecordData(std::string outputfile)//record data
 {
 	bool record_switch = true;
-	int flag_record = 0; // 0:  not recording, 1: recording, 2: saving
+	int record_flag = 0; // 0:  not recording, 1: recording, 2: saving
 	char key_input;
-	int file_index = 0;
-	
+
 	//Record data in mkv
 	k4a::capture capture;
 	std::string root_path(".\\results\\");
-	std::string filename(root_path+outputfile+".mkv");
-	recorder = k4a::record::create(filename.c_str(), device, config);
+	std::string filename(root_path + outputfile + ".mkv");
 
+	recorder = k4a::record::create(filename.c_str(), device, config);
 	if (record_switch == true)
 	{
 		recorder.write_header();
@@ -101,28 +98,28 @@ void KinectAzure::RecordData(std::string outputfile)//record data
 			return;
 		}
 	}
-	while (1){
-		if (device.get_capture(&capture, std::chrono::milliseconds(0))){
+	while (1) {
+		if (device.get_capture(&capture, std::chrono::milliseconds(0))) {
 			//std::cout << "flag: " << flag_record << std::endl;
 			// Activate flag_record to record file
-			if (_kbhit()){
+			if (_kbhit()) {
 				key_input = _getch();
-				if ((key_input == 82) || (key_input == 114)){ // ASC code : "R", "r"
-					flag_record += 1;
-					std::cout << "Recording started" << std::endl;
-					//std::cout << "flag: " << flag_record << std::endl;
+				if ((key_input == 82) || (key_input == 114)) { // ASC code : "R", "r"
+					record_flag += 1;
+					if(record_flag == 1)
+						std::cout << "Recording..." << std::endl;
 				}
 			}
 			//Record file when switch on and record instance on
 			// Add one more condition
-			if ((record_switch == true) && (recorder.is_valid() == true) && (flag_record == 1)) {
+			if ((record_switch == true) && (recorder.is_valid() == true) && (record_flag == 1)) {
 				recorder.write_capture(capture);
 			}
 		}
 
-		if (flag_record == 2){ // if-statement, to save recording.
-			std::cout << "Record file saving" << std::endl;
-			//std::cout << "flag: " << flag_record << std::endl;
+		if (record_flag == 2) { // if-statement, to save recording.
+			std::cout << "Saving..." << std::endl;
+
 			recorder.close();
 			recorder.flush();
 
@@ -132,6 +129,7 @@ void KinectAzure::RecordData(std::string outputfile)//record data
 
 	return;
 }
+
 
 //extract data
 //Console managing
