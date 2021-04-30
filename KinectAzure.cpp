@@ -1,8 +1,7 @@
-// Author: Young-hoon Ji 210422
+// Author: Young-hoon Ji 210430
 
-#include <conio.h>
 #include "KinectAzure.h"
-
+#include "utils.h"
 
 using namespace sen;
 
@@ -13,6 +12,8 @@ KinectAzure::KinectAzure() {
 	if (deviceCount == 0){
 		std::cout << "No azure kinect devices detected!" << std::endl;
 	}
+
+	//root_path = ".\\results\\raw_data";
 
 	config = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
 	config.camera_fps = K4A_FRAMES_PER_SECOND_30;
@@ -77,15 +78,17 @@ void KinectAzure::ShowData() //show data
 	}
 }
 
-void KinectAzure::RecordData(std::string outputfile)//record data
+void KinectAzure::RecordData(std::string outputfile) //record data
 {
+	std::cout << "Start Recording Data..." << std::endl;
+	std::cout << "Press R to record" << std::endl;
+
 	bool record_switch = true;
 	int record_flag = 0; // 0:  not recording, 1: recording, 2: saving
 	char key_input;
 
 	//Record data in mkv
 	k4a::capture capture;
-	std::string root_path(".\\results\\");
 	std::string filename(root_path + outputfile + ".mkv");
 
 	recorder = k4a::record::create(filename.c_str(), device, config);
@@ -126,13 +129,161 @@ void KinectAzure::RecordData(std::string outputfile)//record data
 			return;
 		}
 	}
+	return;
+}
+
+void KinectAzure::ConsoleController() //Console managing
+{
+	std::cout << "Console Controller started" << std::endl;
+	//std::cout << "Set Dir" << std::endl;
+	//SetDir();
+	std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
+
+	char controller_input;
+
+	while (true) {
+		if (_kbhit()) {
+			controller_input = _getch();
+			if ((controller_input==86) || (controller_input==118)) { // ASC code : "V", "v"
+				std::cout << "View Mode" << std::endl;
+				ShowData();
+				std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
+			}
+			else if ((controller_input==82) || (controller_input==114)) { // ASC code : "R", "r"
+				std::cout << "Recording Mode" << std::endl;
+				std::cout << "File name: ";
+				std::string test_file;
+				std::getline(std::cin, test_file);
+				RecordData(test_file);
+				std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
+			}
+			else if ((controller_input==83) || (controller_input==115)) { // ASC code : "S", "s"
+				std::cout << "Set Dir" << std::endl;
+				SetDir();
+				std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
+			}
+			else if ((controller_input==69) || (controller_input==101)) { // ASC code : "E", "e"
+				std::cout << "Extract Data" << std::endl;
+				ExtractData();
+				std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
+			}
+			else if (controller_input==81 || controller_input==113) { // ASC code : "Q", "q"
+				std::cout << "Closing Program..." << std::endl;
+				CloseDevice();
+
+				return;
+			}
+			else {
+				std::cout << "Retype the command" << std::endl;
+			}
+		}
+	}
+	return;
+}
+
+void KinectAzure::SetDir()
+{
+	std::string string_input;
+	
+	std::cout << "Type the root directory to save files: " << std::endl;
+	std::getline(std::cin, string_input);
+
+	while (IsPathExist(string_input) == false) {
+		std::cout << "Directory not existed, Retype it." << std::endl;
+		std::cout << "Type the root directory to save files: ";
+		std::getline(std::cin, string_input);
+	}
+	root_path = string_input + "\\";
+	std::cout << "Root Directory set to " << root_path << std::endl;
 
 	return;
 }
 
+void KinectAzure::ExtractData() //extract data
+{
+	std::string data_dir;
+	std::vector<std::string> dir_list;
 
-//extract data
-//Console managing
+	std::cout << "Type the directory where raw file saved: " << std::endl;
+	std::getline(std::cin, data_dir);
+
+	while (IsPathExist(data_dir) == false) {
+		std::cout << "Directory not existed, Retype it." << std::endl;
+		std::cout << "Type the directory where raw file saved: ";
+		std::getline(std::cin, data_dir);
+	}
+	std::cout << "Extracted file will be saved into " << data_dir << std::endl;
+
+	dir_list = get_files_inDirectory(root_path, "mkv");
+
+	// for loop here
+	for(int i=0;i<dir_list.size();i++){
+		std::string target_video(root_path +"\\"+dir_list[i]);
+		std::string outputfile(dir_list[i].substr(0, dir_list[i].rfind(".")) +".csv");
+
+		std::ofstream file(data_dir + "\\extracted_" + outputfile);
+		//file.open(save_dir+outputfile, std::ios::in);
+		if (!(file.is_open())) {
+			std::cout << "Path: " << data_dir + outputfile << std::endl;
+			std::cout << "File not opened" << std::endl;
+
+			return;
+		}
+		try {
+			std::cout << "Extracting..." << std::endl;
+			playback = k4a::playback::open((target_video).c_str());
+			k4a::calibration sensor_calibration = playback.get_calibration();
+			tracker = k4abt::tracker::create(sensor_calibration);
+
+			k4a::capture video_capture;
+
+			int frame_count = 0;
+
+			while (1) {
+				if (playback.get_next_capture(&video_capture)) {
+					frame_count++;
+					//std::cout << "Start processing frame " << frame_count << std::endl;
+					if (!tracker.enqueue_capture(video_capture)) {
+						std::cout << "Error! Add capture to tracker process queue timeout!" << std::endl;
+						break;
+					}
+					k4abt::frame body_frame = tracker.pop_result();
+					if (body_frame != nullptr) {
+						uint32_t num_bodies = body_frame.get_num_bodies();
+
+						for (uint32_t i = 0; i < num_bodies; i++) {
+							k4abt_body_t body = body_frame.get_body(i);
+							//print_body_information(body);
+							file << frame_count << std::endl;
+							for (int i = 0; i < (int)K4ABT_JOINT_COUNT; i++)
+							{
+								k4a_float3_t position = body.skeleton.joints[i].position;
+								k4a_quaternion_t orientation = body.skeleton.joints[i].orientation;
+								//k4abt_joint_confidence_level_t confidence_level = body.skeleton.joints[i].confidence_level; // line for joint confidence outputs
+
+								file << position.v[0] << "," << position.v[1] << "," << position.v[2] << "," <<
+									orientation.v[0] << "," << orientation.v[1] << "," << orientation.v[2] << "," << orientation.v[3] << std::endl;
+							}
+						}
+					}
+					else
+						break;
+				}
+				else
+					break;
+			}
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "Failed with exception:" << std::endl
+				<< "    " << e.what() << std::endl;
+			return;
+		}
+
+		file.close();
+	}
+	return;
+}
 
 void KinectAzure::CloseDevice()
 {

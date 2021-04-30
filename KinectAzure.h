@@ -3,11 +3,18 @@
 #ifndef KINECTAZURE_H
 #define KINECTAZURE_H
 
+#include <iostream>
+#include <fstream>
+#include <sys/stat.h>
+#include <conio.h>
+#include <ctime>
+#include <vector>
+
 #include "opencv2/opencv.hpp"
 #include <k4a/k4a.hpp>
-//#include <k4arecord/record.h>
 #include <k4arecord/record.hpp>
-
+#include <k4arecord/playback.hpp>
+#include <k4abt.hpp>
 
 #include "Pixel.h"
 #include "DepthPixelColorizer.h"
@@ -18,18 +25,24 @@ public:
 	KinectAzure();
 	//~KinectAzure();
 
-	//show data
-	void ShowData();
-	//record data
-	void RecordData(std::string outputfile);
-	//extract data
-	//Console managing
-	void CloseDevice();
+	//void RunKinect(); // for future to intergrate functions
+	void ConsoleController(); // kinect controller
+	void ExtractData();
 
 private:
 	k4a_device_configuration_t config;
 	k4a::device device;
 	k4a::record recorder;
+	k4a::playback playback;
+	k4abt::tracker tracker;
+
+	std::string root_path;
+	//std::string save_path_extracted;
+
+	void ShowData(); //show kinect output to aim the target
+	void RecordData(std::string outputfile); //save record data into files
+	void SetDir(); // set filesave directory
+	void CloseDevice();
 };
 
 #endif KINECTAZURE_H

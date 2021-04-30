@@ -1,5 +1,10 @@
 // Main Reference: https://github.com/forestsen/KinectAzureDKProgramming/blob/master/OpenCV_OneKinect/Source_1.cpp
-// Younghoon Ji 20210422
+/*
+Author: Younghoon Ji 
+210422, initial commit
+210430 3 functions added, ConsoleController(), void ExtractData(), SetDir()
+*/
+
 
 #include <iostream>
 #include <string>
@@ -8,18 +13,14 @@
 #include "KinectAzure.h"
 
 
-
 int main(void)
 {
 	std::cout << "Running Kinect" << std::endl;
+	//std::string test_file("HelloWorld");
 
 	KinectAzure Kinect = KinectAzure();
-	Kinect.ShowData();
-	
-	//std::string test_file("HelloWorld");
-	//Kinect.RecordData(test_file);
-	
-	Kinect.CloseDevice();
+	Kinect.ConsoleController();
+
 
 	return 0;
 }
