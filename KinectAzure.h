@@ -39,6 +39,9 @@ private:
 	std::string root_path;
 	//std::string save_path_extracted;
 
+	bool item_manual;
+	int item_index; // for auto file name
+
 	void ShowData(); //show kinect output to aim the target
 	void RecordData(std::string outputfile); //save record data into files
 	void SetDir(); // set filesave directory

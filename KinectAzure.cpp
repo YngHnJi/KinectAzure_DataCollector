@@ -12,8 +12,18 @@ KinectAzure::KinectAzure() {
 	if (deviceCount == 0){
 		std::cout << "No azure kinect devices detected!" << std::endl;
 	}
+	std::string string_input;
 
-	//root_path = ".\\results\\raw_data";
+	root_path = ".\\results\\raw_data\\";
+	std::cout << "Default root_path: " << root_path << std::endl;
+	std::cout << "Choose manual/auto" << std::endl;
+	std::getline(std::cin, string_input);
+	if (string_input == "manual") {
+		item_manual = true;
+	}
+	else if (string_input == "auto") {
+		item_manual = false;
+	}
 
 	config = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
 	config.camera_fps = K4A_FRAMES_PER_SECOND_30;
@@ -151,9 +161,15 @@ void KinectAzure::ConsoleController() //Console managing
 			}
 			else if ((controller_input==82) || (controller_input==114)) { // ASC code : "R", "r"
 				std::cout << "Recording Mode" << std::endl;
-				std::cout << "File name: ";
 				std::string test_file;
-				std::getline(std::cin, test_file);
+				if(item_manual==true){
+					std::cout << "File name: ";
+					std::getline(std::cin, test_file);
+				}
+				else {
+					test_file = "Test_" + std::to_string(item_index);
+					item_index++;
+				}
 				RecordData(test_file);
 				std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
 			}
@@ -184,7 +200,7 @@ void KinectAzure::ConsoleController() //Console managing
 void KinectAzure::SetDir()
 {
 	std::string string_input;
-	
+
 	std::cout << "Type the root directory to save files: " << std::endl;
 	std::getline(std::cin, string_input);
 
@@ -199,7 +215,7 @@ void KinectAzure::SetDir()
 	return;
 }
 
-void KinectAzure::ExtractData() //extract data
+void KinectAzure::ExtractData() // extract data
 {
 	std::string data_dir;
 	std::vector<std::string> dir_list;
