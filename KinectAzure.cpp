@@ -217,10 +217,26 @@ void KinectAzure::SetDir()
 
 void KinectAzure::ExtractData() // extract data
 {
+	// joint information
+	// ref: https://microsoft.github.io/Azure-Kinect-Body-Tracking/release/0.9.x/k4abttypes_8h_source.html
+	k4abt::frame body_frame;
+	uint32_t num_bodies;
+	k4abt_body_t body;
+	k4a_float3_t position;
+
+
+	std::vector<std::string> joint_info = { "JOINT_PELVIS", "JOINT_SPINE_NAVEL", "JOINT_SPINE_CHEST", "JOINT_NECK",
+	 "JOINT_CLAVICLE_LEFT", "JOINT_SHOULDER_LEFT", "JOINT_ELBOW_LEFT", "JOINT_WRIST_LEFT", "JOINT_HAND_LEFT",
+	 "JOINT_HANDTIP_LEFT", "JOINT_THUMB_LEFT", "JOINT_CLAVICLE_RIGHT", "JOINT_SHOULDER_RIGHT", "JOINT_ELBOW_RIGHT",
+	 "JOINT_WRIST_RIGHT", "JOINT_HAND_RIGHT", "JOINT_HANDTIP_RIGHT", "JOINT_THUMB_RIGHT", "JOINT_HIP_LEFT",
+	 "JOINT_KNEE_LEFT", "JOINT_ANKLE_LEFT", "JOINT_FOOT_LEFT", "JOINT_HIP_RIGHT", "JOINT_KNEE_RIGHT",
+	 "JOINT_ANKLE_RIGHT", "JOINT_FOOT_RIGHT", "JOINT_HEAD", "JOINT_NOSE", "JOINT_EYE_LEFT", "JOINT_EAR_LEFT",
+	 "JOINT_EYE_RIGHT", "JOINT_EAR_RIGHT" };
+
 	std::string data_dir;
 	std::vector<std::string> dir_list;
 
-	std::cout << "Type the directory where raw file saved: " << std::endl;
+	std::cout << "Type the directory where to save extracted file: " << std::endl;
 	std::getline(std::cin, data_dir);
 
 	while (IsPathExist(data_dir) == false) {
@@ -254,6 +270,11 @@ void KinectAzure::ExtractData() // extract data
 			k4a::capture video_capture;
 
 			int frame_count = 0;
+			file << "Frame";
+			for (int i = 0; i < joint_info.size(); i++) {
+				file << "," << joint_info[i]+".X" << "," << joint_info[i] + ".Y" << "," << joint_info[i] + ".Z";
+			}
+			file << std::endl;
 
 			while (1) {
 				if (playback.get_next_capture(&video_capture)) {
@@ -263,23 +284,24 @@ void KinectAzure::ExtractData() // extract data
 						std::cout << "Error! Add capture to tracker process queue timeout!" << std::endl;
 						break;
 					}
-					k4abt::frame body_frame = tracker.pop_result();
+					body_frame = tracker.pop_result();
 					if (body_frame != nullptr) {
-						uint32_t num_bodies = body_frame.get_num_bodies();
+						num_bodies = body_frame.get_num_bodies();
 
 						for (uint32_t i = 0; i < num_bodies; i++) {
-							k4abt_body_t body = body_frame.get_body(i);
+							body = body_frame.get_body(i);
 							//print_body_information(body);
-							file << frame_count << std::endl;
+							//file << frame_count << std::endl;
+							file << frame_count;
 							for (int i = 0; i < (int)K4ABT_JOINT_COUNT; i++)
 							{
-								k4a_float3_t position = body.skeleton.joints[i].position;
-								k4a_quaternion_t orientation = body.skeleton.joints[i].orientation;
+								position = body.skeleton.joints[i].position;
+								//k4a_quaternion_t orientation = body.skeleton.joints[i].orientation;
 								//k4abt_joint_confidence_level_t confidence_level = body.skeleton.joints[i].confidence_level; // line for joint confidence outputs
 
-								file << position.v[0] << "," << position.v[1] << "," << position.v[2] << "," <<
-									orientation.v[0] << "," << orientation.v[1] << "," << orientation.v[2] << "," << orientation.v[3] << std::endl;
+								file << "," << position.xyz.x << "," << position.xyz.y << "," << position.xyz.z;
 							}
+							file << std::endl;
 						}
 					}
 					else
