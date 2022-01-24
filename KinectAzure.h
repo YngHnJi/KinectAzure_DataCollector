@@ -9,6 +9,7 @@
 #include <conio.h>
 #include <ctime>
 #include <vector>
+#include <chrono> // added 210728 yhji
 
 #include "opencv2/opencv.hpp"
 #include <k4a/k4a.hpp>
@@ -27,7 +28,6 @@ public:
 
 	//void RunKinect(); // for future to intergrate functions
 	void ConsoleController(); // kinect controller
-	void ExtractData();
 
 private:
 	k4a_device_configuration_t config;
@@ -41,10 +41,12 @@ private:
 
 	bool item_manual;
 	int item_index; // for auto file name
+	float fps;
 
 	void ShowData(); //show kinect output to aim the target
 	void RecordData(std::string outputfile); //save record data into files
 	void SetDir(); // set filesave directory
+	void ExtractData(); // extraxt video data to skeleton joint data
 	void CloseDevice();
 };
 

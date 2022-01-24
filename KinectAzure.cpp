@@ -16,13 +16,22 @@ KinectAzure::KinectAzure() {
 
 	root_path = ".\\results\\raw_data\\";
 	std::cout << "Default root_path: " << root_path << std::endl;
-	std::cout << "Choose manual/auto" << std::endl;
+	std::cout << "Choose manual/auto: ";
 	std::getline(std::cin, string_input);
-	if (string_input == "manual") {
-		item_manual = true;
-	}
-	else if (string_input == "auto") {
-		item_manual = false;
+	while(1){
+		if (string_input == "manual") {
+			item_manual = true;
+			break;
+		}
+		else if (string_input == "auto") {
+			item_manual = false;
+			break;
+		}
+		else {
+			std::cout << "Retype" << std::endl;
+			std::cout << "Choose manual/auto: ";
+			std::getline(std::cin, string_input);
+		}
 	}
 
 	config = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
@@ -34,6 +43,8 @@ KinectAzure::KinectAzure() {
 	//config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32; //for imshow
 	config.color_resolution = K4A_COLOR_RESOLUTION_720P;
 	config.synchronized_images_only = true;
+
+	fps = 30; // used in extract joint data
 
 	std::cout << "Started opening K4A device..." << std::endl;
 	device = k4a::device::open(K4A_DEVICE_DEFAULT);
@@ -91,10 +102,10 @@ void KinectAzure::ShowData() //show data
 void KinectAzure::RecordData(std::string outputfile) //record data
 {
 	std::cout << "Start Recording Data..." << std::endl;
-	std::cout << "Press R to record" << std::endl;
+	std::cout << "Press R to save" << std::endl;
 
 	bool record_switch = true;
-	int record_flag = 0; // 0:  not recording, 1: recording, 2: saving
+	int record_flag = 0; // 0: recording, 1: saving
 	char key_input;
 
 	//Record data in mkv
@@ -119,18 +130,18 @@ void KinectAzure::RecordData(std::string outputfile) //record data
 				key_input = _getch();
 				if ((key_input == 82) || (key_input == 114)) { // ASC code : "R", "r"
 					record_flag += 1;
-					if(record_flag == 1)
-						std::cout << "Recording..." << std::endl;
+					/*if(record_flag == 1) // commented 210728 yhji, for sync the process same with other devices
+						std::cout << "Recording..." << std::endl;*/
 				}
 			}
 			//Record file when switch on and record instance on
 			// Add one more condition
-			if ((record_switch == true) && (recorder.is_valid() == true) && (record_flag == 1)) {
+			if ((record_switch == true) && (recorder.is_valid() == true) && (record_flag == 0)) {
 				recorder.write_capture(capture);
 			}
 		}
 
-		if (record_flag == 2) { // if-statement, to save recording.
+		if (record_flag == 1) { // if-statement, to save recording.
 			std::cout << "Saving..." << std::endl;
 
 			recorder.close();
@@ -176,7 +187,8 @@ void KinectAzure::ConsoleController() //Console managing
 			else if ((controller_input==83) || (controller_input==115)) { // ASC code : "S", "s"
 				std::cout << "Set Dir" << std::endl;
 				SetDir();
-				std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
+				//std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
+				std::cout << "option: v(view), s(set directory), r(record), e(extract data): ";
 			}
 			else if ((controller_input==69) || (controller_input==101)) { // ASC code : "E", "e"
 				std::cout << "Extract Data" << std::endl;
@@ -184,7 +196,7 @@ void KinectAzure::ConsoleController() //Console managing
 				std::cout << "option: v(view), s(set directory), r(record), e(extract data)" << std::endl;
 			}
 			else if (controller_input==81 || controller_input==113) { // ASC code : "Q", "q"
-				std::cout << "Closing Program..." << std::endl;
+				std::cout << std::endl << "Closing Program..." << std::endl;
 				CloseDevice();
 
 				return;
@@ -201,7 +213,7 @@ void KinectAzure::SetDir()
 {
 	std::string string_input;
 
-	std::cout << "Type the root directory to save files: " << std::endl;
+	std::cout << "Type the root directory to save files: ";
 	std::getline(std::cin, string_input);
 
 	while (IsPathExist(string_input) == false) {
@@ -224,7 +236,6 @@ void KinectAzure::ExtractData() // extract data
 	k4abt_body_t body;
 	k4a_float3_t position;
 
-
 	std::vector<std::string> joint_info = { "JOINT_PELVIS", "JOINT_SPINE_NAVEL", "JOINT_SPINE_CHEST", "JOINT_NECK",
 	 "JOINT_CLAVICLE_LEFT", "JOINT_SHOULDER_LEFT", "JOINT_ELBOW_LEFT", "JOINT_WRIST_LEFT", "JOINT_HAND_LEFT",
 	 "JOINT_HANDTIP_LEFT", "JOINT_THUMB_LEFT", "JOINT_CLAVICLE_RIGHT", "JOINT_SHOULDER_RIGHT", "JOINT_ELBOW_RIGHT",
@@ -236,24 +247,25 @@ void KinectAzure::ExtractData() // extract data
 	std::string data_dir;
 	std::vector<std::string> dir_list;
 
-	std::cout << "Type the directory where to save extracted file: " << std::endl;
-	std::getline(std::cin, data_dir);
+	//std::cout << "Type the directory where to save extracted files: ";
+	//std::getline(std::cin, data_dir);
 
-	while (IsPathExist(data_dir) == false) {
-		std::cout << "Directory not existed, Retype it." << std::endl;
-		std::cout << "Type the directory where raw file saved: ";
-		std::getline(std::cin, data_dir);
-	}
-	std::cout << "Extracted file will be saved into " << data_dir << std::endl;
+	//while (IsPathExist(data_dir) == false) {
+	//	std::cout << "Directory not existed, Retype it." << std::endl;
+	//	std::cout << "Type the directory where raw file saved: ";
+	//	std::getline(std::cin, data_dir);}
+	//std::cout << "Extracted file will be saved into " << data_dir << std::endl;
 
 	dir_list = get_files_inDirectory(root_path, "mkv");
+	//dir_list = get_files_inDirectory(data_dir, "mkv");
 
 	// for loop here
 	for(int i=0;i<dir_list.size();i++){
 		std::string target_video(root_path +"\\"+dir_list[i]);
 		std::string outputfile(dir_list[i].substr(0, dir_list[i].rfind(".")) +".csv");
 
-		std::ofstream file(data_dir + "\\extracted_" + outputfile);
+		//std::ofstream file(data_dir + "\\extracted_" + outputfile);
+		std::ofstream file(root_path + "\\extracted_" + outputfile); // edited 210730
 		//file.open(save_dir+outputfile, std::ios::in);
 		if (!(file.is_open())) {
 			std::cout << "Path: " << data_dir + outputfile << std::endl;
@@ -268,9 +280,9 @@ void KinectAzure::ExtractData() // extract data
 			tracker = k4abt::tracker::create(sensor_calibration);
 
 			k4a::capture video_capture;
-
+			
 			int frame_count = 0;
-			file << "Frame";
+			file << "sec";
 			for (int i = 0; i < joint_info.size(); i++) {
 				file << "," << joint_info[i]+".X" << "," << joint_info[i] + ".Y" << "," << joint_info[i] + ".Z";
 			}
@@ -292,7 +304,7 @@ void KinectAzure::ExtractData() // extract data
 							body = body_frame.get_body(i);
 							//print_body_information(body);
 							//file << frame_count << std::endl;
-							file << frame_count;
+							file << frame_count * (1/fps);
 							for (int i = 0; i < (int)K4ABT_JOINT_COUNT; i++)
 							{
 								position = body.skeleton.joints[i].position;

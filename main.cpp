@@ -3,6 +3,8 @@
 Author: Younghoon Ji 
 210422, initial commit
 210430 3 functions added, ConsoleController(), void ExtractData(), SetDir()
+210728 record function edited working properly with other devices, add time in extract function
+210730 extraction function edited
 */
 
 
