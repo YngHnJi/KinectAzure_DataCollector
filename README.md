@@ -4,7 +4,7 @@ It's the code make available to collect data through Kinect Azure device
 
 Planning to control this through console in/out
 
-In progress (updated in 210430)
+In progress (updated in 210728)
 
 Dependency
   ,Windows10
