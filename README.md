@@ -1,16 +1,12 @@
-# KinectAzure_DataCollector
+## Introduction
 
-It's the code make available to collect data through Kinect Azure device
+This is a repository to collect human skeleton data through Kinect Azure depth camera with OpenCV library in C++.
 
-Planning to control this through console in/out
+## Environments
 
-In progress (updated in 210728)
+- This code developed in Windows10 VisualStudio 2019 with OpenCV(ver 4.5.1)
+- Microsoft Kinect Azure required
 
-Dependency
-  ,Windows10
-  ,VisualStudio 2019
-  ,Azure Kinect
-  ,OpenCV 4.5.1
+## Reference
 
-
-Reference: https://github.com/forestsen/KinectAzureDKProgramming
+[https://github.com/forestsen/KinectAzureDKProgramming](https://github.com/forestsen/KinectAzureDKProgramming)
