@@ -40,7 +40,7 @@ Azure Kinect PC hardward and system requirements([Link](https://docs.microsoft.c
 
 ---
 
-![pipeline](Attachment/pipeline.png)
+![pipeline](attachment/pipeline.png)
 
 ## Program Details
 
@@ -48,7 +48,7 @@ Azure Kinect PC hardward and system requirements([Link](https://docs.microsoft.c
 
 Program Control Options for file system
 
-![program init cmd components](Attachment/program_init.png)
+![program init cmd components](attachment/program_init.png)
 
 program init cmd components
 
@@ -58,11 +58,11 @@ Data Saving Option
 
 - manual: When data is collected through the keyboard input “r”, the name of the file can be set separately to store image information
 
-![manual_cmd](Attachment/manual_cmd.png)
+![manual_cmd](attachment/manual_cmd.png)
 
 - auto:  When collecting data through the keyboard input “r”, the name of the file is stored in order as shown in the picture below
 
-![auto_cmd](Attachment/auto_cmd.png)
+![auto_cmd](attachment/auto_cmd.png)
 
 
 Program Options
@@ -76,15 +76,15 @@ Example of Azure Kinect Skeleton data
 
 [https://docs.microsoft.com/hr-hr/azure/kinect-dk/body-joints](https://docs.microsoft.com/hr-hr/azure/kinect-dk/body-joints)
 
-![skeleton_info](Attachment/skeleton_info.png)
+![skeleton_info](attachment/skeleton_info.png)
 
-![skeleton_info2](Attachment/skeleton_info2.png)
+![skeleton_info2](attachment/skeleton_info2.png)
 
 Example of data extracting from video(.mkv) to skeleton(.csv)
 
-![extracting_cmd](Attachment/extracting_cmd.png)
+![extracting_cmd](attachment/extracting_cmd.png)
 
-![Example of extracted skeleton data](Attachment/extracting_csv.png)
+![Example of extracted skeleton data](attachment/extracting_csv.png)
 
 Example of extracted skeleton data
 
